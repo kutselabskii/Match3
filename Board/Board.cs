@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -11,7 +11,7 @@ namespace MatchThree
         Rectangle,
         Triangle,
         Circle,
-        Angle,
+        Trapezium,
         Cross
     }
 
@@ -67,9 +67,11 @@ namespace MatchThree
             for (int i = 0; i < 8; i++)
                 board.Add(new List<Tile>());
 
+
+            Random rand = new Random();
             for (int i = 0; i < 8; i++)
                 for (int j = 0; j < 8; j++)
-                    board[i].Add(new Tile(j * columnWidth, (i + 1) * rowHeight, Tiles.Rectangle, Outlines.Default));
+                    board[i].Add(new Tile(j * columnWidth, (i + 1) * rowHeight, (Tiles)rand.Next(0, 5), Outlines.Default));
         }
 
         public void LoadContent(Microsoft.Xna.Framework.Content.ContentManager content)
@@ -77,6 +79,10 @@ namespace MatchThree
             spriteBatch = MatchThreeGame.spriteBatch;
 
             tileTextures.Add(Tiles.Rectangle, content.Load<Texture2D>("Figures/square0000"));
+            tileTextures.Add(Tiles.Triangle, content.Load<Texture2D>("Figures/triangle0000"));
+            tileTextures.Add(Tiles.Circle, content.Load<Texture2D>("Figures/circle0000"));
+            tileTextures.Add(Tiles.Trapezium, content.Load<Texture2D>("Figures/trapezium0000"));
+            tileTextures.Add(Tiles.Cross, content.Load<Texture2D>("Figures/cross0000"));
 
             outlineTextures.Add(Outlines.Default, CreateOutlineTexture(Color.SlateGray));
         }
