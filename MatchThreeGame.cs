@@ -6,21 +6,27 @@ namespace MatchThree
 {
     public class MatchThreeGame : Game
     {
-        GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+        public static GraphicsDeviceManager graphics;
+        public static SpriteBatch spriteBatch;
+
+        Board board;
 
         public MatchThreeGame()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+
+            board = new Board();
         }
 
 
         protected override void Initialize()
         {
             graphics.PreferredBackBufferWidth = 1024;
-            graphics.PreferredBackBufferHeight = 768;
+            graphics.PreferredBackBufferHeight = 864;
             graphics.ApplyChanges();
+
+            board.Initialize();
 
             base.Initialize();
         }
@@ -29,12 +35,12 @@ namespace MatchThree
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
+            board.LoadContent();
         }
 
         protected override void UnloadContent()
         {
-            // TODO: Unload any non ContentManager content here
+            board.UnloadContent();
         }
 
         protected override void Update(GameTime gameTime)
@@ -42,7 +48,7 @@ namespace MatchThree
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
+            board.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -50,6 +56,11 @@ namespace MatchThree
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.White);
+            spriteBatch.Begin();
+
+            board.Draw(gameTime);
+
+            spriteBatch.End();
 
             base.Draw(gameTime);
         }
