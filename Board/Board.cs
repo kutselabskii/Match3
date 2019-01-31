@@ -9,20 +9,22 @@ namespace MatchThree
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
 
+        private Texture2D squareTexture;
+
         public void Initialize()
         {
             graphics = MatchThreeGame.graphics;
-            spriteBatch = MatchThreeGame.spriteBatch;
         }
 
-        public void LoadContent()
+        public void LoadContent(Microsoft.Xna.Framework.Content.ContentManager content)
         {
-
+            spriteBatch = MatchThreeGame.spriteBatch;
+            squareTexture = content.Load<Texture2D>("Figures/square0000");
         }
 
         public void UnloadContent()
         {
-
+        
         }
 
         public void Update(GameTime gameTime)
@@ -32,7 +34,7 @@ namespace MatchThree
 
         public void Draw(GameTime gameTime)
         {
-
+            spriteBatch.Draw(squareTexture, new Rectangle(0, 96, 128, 96), Color.White);
         }
     }
 }

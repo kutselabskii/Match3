@@ -26,16 +26,14 @@ namespace MatchThree
             graphics.PreferredBackBufferHeight = 864;
             graphics.ApplyChanges();
 
-            board.Initialize();
-
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            board.LoadContent();
+            
+            board.LoadContent(Content);
         }
 
         protected override void UnloadContent()
