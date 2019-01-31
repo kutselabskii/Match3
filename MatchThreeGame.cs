@@ -26,6 +26,8 @@ namespace MatchThree
             graphics.PreferredBackBufferHeight = 864;
             graphics.ApplyChanges();
 
+            board.Initialize();
+
             base.Initialize();
         }
 
