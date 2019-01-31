@@ -18,7 +18,9 @@ namespace MatchThree
 
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            graphics.PreferredBackBufferWidth = 1024;
+            graphics.PreferredBackBufferHeight = 768;
+            graphics.ApplyChanges();
 
             base.Initialize();
         }
@@ -47,9 +49,7 @@ namespace MatchThree
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            // TODO: Add your drawing code here
+            GraphicsDevice.Clear(Color.White);
 
             base.Draw(gameTime);
         }
