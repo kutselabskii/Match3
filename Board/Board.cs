@@ -67,7 +67,6 @@ namespace MatchThree
             for (int i = 0; i < 8; i++)
                 board.Add(new List<Tile>());
 
-
             Random rand = new Random();
             for (int i = 0; i < 8; i++)
                 for (int j = 0; j < 8; j++)
@@ -84,7 +83,8 @@ namespace MatchThree
             tileTextures.Add(Tiles.Trapezium, content.Load<Texture2D>("Figures/trapezium0000"));
             tileTextures.Add(Tiles.Cross, content.Load<Texture2D>("Figures/cross0000"));
 
-            outlineTextures.Add(Outlines.Default, CreateOutlineTexture(Color.SlateGray));
+            outlineTextures.Add(Outlines.Default, CreateOutlineTexture(Color.LightGray));
+            outlineTextures.Add(Outlines.Highlighted, CreateOutlineTexture(Color.Yellow, 7));
         }
 
         public void UnloadContent()
@@ -94,7 +94,16 @@ namespace MatchThree
 
         public void Update(GameTime gameTime)
         {
+            MouseState mouseState = Mouse.GetState();
 
+            if (mouseState.LeftButton == ButtonState.Pressed && MatchThreeGame.previousMouseButtonState != ButtonState.Pressed)
+            {
+                int y = mouseState.X / columnWidth;
+                int x = (mouseState.Y - 96) / rowHeight;
+
+                if (x > 0 && x < 8 && y > 0 && y < 8)
+                    board[x][y].outline = (board[x][y].outline == Outlines.Default) ? Outlines.Highlighted : Outlines.Default;
+            }
         }
 
         public void Draw(GameTime gameTime)
@@ -104,14 +113,14 @@ namespace MatchThree
                     board[i][j].Draw(spriteBatch);
         }
 
-        private Texture2D CreateOutlineTexture(Color color)
+        private Texture2D CreateOutlineTexture(Color color, int size = 1)
         {
             Texture2D outline = new Texture2D(graphics.GraphicsDevice, columnWidth, rowHeight);
 
             Color[] pixels = new Color[rowHeight * columnWidth];
             for (int i = 0; i < rowHeight; i++)
                 for (int j = 0; j < columnWidth; j++)
-                    if (i == 0 || j == 0)
+                    if (i < size || j < size || i > rowHeight - size - 1 || j > columnWidth - size - 1)
                         pixels[i * columnWidth + j] = color;
                     else
                         pixels[i * columnWidth + j] = Color.Transparent;

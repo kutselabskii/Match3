@@ -9,6 +9,8 @@ namespace MatchThree
         public static GraphicsDeviceManager graphics;
         public static SpriteBatch spriteBatch;
 
+        public static ButtonState previousMouseButtonState;
+
         Board board;
 
         public MatchThreeGame()
@@ -25,6 +27,9 @@ namespace MatchThree
             graphics.PreferredBackBufferWidth = 1024;
             graphics.PreferredBackBufferHeight = 864;
             graphics.ApplyChanges();
+
+            IsMouseVisible = true;
+            previousMouseButtonState = ButtonState.Released;
 
             board.Initialize();
 
@@ -49,6 +54,7 @@ namespace MatchThree
                 Exit();
 
             board.Update(gameTime);
+            previousMouseButtonState = Mouse.GetState().LeftButton;
 
             base.Update(gameTime);
         }
