@@ -16,13 +16,15 @@ namespace MatchThree
         Triangle,
         Circle,
         Trapezium,
-        Cross
+        Cross,
+        None
     }
 
     public enum Outlines
     {
         Default,
-        Highlighted
+        Highlighted,
+        None
     }
 
     public enum GameStates
@@ -38,11 +40,16 @@ namespace MatchThree
         public Vector2 coordinates;
         public Tiles tile;
         public Outlines outline;
+        public bool markedAsDead;
 
-        public Tile() { }
+        public Tile()
+        {
+            markedAsDead = false;
+        }
 
         public Tile(int _x, int _y, Tiles _tile, Outlines _outline)
         {
+            markedAsDead = false;
             x = _x;
             y = _y;
             coordinates = new Vector2(x * Board.columnWidth, (y + 1) * Board.rowHeight);
@@ -121,9 +128,11 @@ namespace MatchThree
             tileTextures.Add(Tiles.Circle, content.Load<Texture2D>("Figures/circle0000"));
             tileTextures.Add(Tiles.Trapezium, content.Load<Texture2D>("Figures/trapezium0000"));
             tileTextures.Add(Tiles.Cross, content.Load<Texture2D>("Figures/cross0000"));
+            tileTextures.Add(Tiles.None, CreateOutlineTexture(Color.Transparent));
 
             outlineTextures.Add(Outlines.Default, CreateOutlineTexture(Color.LightGray));
             outlineTextures.Add(Outlines.Highlighted, CreateOutlineTexture(Color.Yellow, 5));
+            outlineTextures.Add(Outlines.None, CreateOutlineTexture(Color.Transparent));
         }
 
         public void UnloadContent()
@@ -240,8 +249,88 @@ namespace MatchThree
             {
                 state = GameStates.Playing;
                 highlightedTile.Swap(targetTile);
+
+                FindMultiples();
+                DeleteMarkedTiles();
+                // Swap backwards if no tiles were deleted
+
                 RemoveSelection();
             }
+        }
+
+        private void ClearBuffer(List<Tile> buffer)
+        {
+            if (buffer.Count > 2)
+                for (int k = 0; k < buffer.Count; k++)
+                    buffer[k].markedAsDead = true;
+            buffer.Clear();
+        }
+
+        private void FindMultiples()
+        {
+            // Horizontal
+            for (int i = 0; i < 8; i++)
+            {
+                List<Tile> buffer = new List<Tile>();
+                for (int j = 0; j < 8; j++)
+                {
+                    if (buffer.Count == 0)
+                    {
+                        buffer.Add(board[i][j]);
+                        continue;
+                    }
+
+                    if (buffer[0].tile == board[i][j].tile)
+                        buffer.Add(board[i][j]);
+                    else
+                    {
+                        ClearBuffer(buffer);
+                        buffer.Add(board[i][j]);
+                    }
+                }
+                ClearBuffer(buffer);
+            }
+
+            // Vertical
+            for (int j = 0; j < 8; j++)
+            {
+                List<Tile> buffer = new List<Tile>();
+                for (int i = 0; i < 8; i++)
+                {
+                    if (buffer.Count == 0)
+                    {
+                        buffer.Add(board[i][j]);
+                        continue;
+                    }
+
+                    if (buffer[0].tile == board[i][j].tile)
+                        buffer.Add(board[i][j]);
+                    else
+                    {
+                        ClearBuffer(buffer);
+                        buffer.Add(board[i][j]);
+                    }
+                }
+                ClearBuffer(buffer);
+            }
+        }
+
+        private bool DeleteMarkedTiles()
+        {
+            bool result = false;
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                {
+                    if (board[i][j].markedAsDead)
+                    {
+                        //Add scores here
+                        result = true;
+                        board[i][j].markedAsDead = false;
+                        board[i][j].outline = Outlines.None;
+                        board[i][j].tile = Tiles.None;
+                    }
+                }
+            return result;
         }
     }
 }
