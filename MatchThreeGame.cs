@@ -11,6 +11,9 @@ namespace MatchThree
 
         public static ButtonState previousMouseButtonState;
 
+        public static SpriteFont font;
+        public static int score;
+
         Board board;
 
         public MatchThreeGame()
@@ -39,6 +42,7 @@ namespace MatchThree
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
+            font = Content.Load<SpriteFont>("Arial");
             
             board.LoadContent(Content);
         }

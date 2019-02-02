@@ -142,6 +142,8 @@ namespace MatchThree
                 FindMultiples();
             } while (DeleteMarkedTiles());
 
+            MatchThreeGame.score = 0;
+
             state = GameStates.Playing;
         }
 
@@ -191,6 +193,8 @@ namespace MatchThree
 
             for (int i = 0; i < fallingTiles.Count; i++)
                 fallingTiles[i].Draw(spriteBatch);
+
+            spriteBatch.DrawString(MatchThreeGame.font, "Score: " + MatchThreeGame.score, new Vector2(0, rowHeight / 2), Color.Black);
         }
 
         private Texture2D CreateOutlineTexture(Color color, int size = 1)
@@ -330,15 +334,6 @@ namespace MatchThree
                 List<Tile> buffer = new List<Tile>();
                 for (int j = 0; j < 8; j++)
                 {
-
-                    // Temporary
-                    if (board[i][j].tile == Tiles.None)
-                    {
-                        ClearBuffer(buffer);
-                        continue;
-                    }
-                    //
-
                     if (buffer.Count == 0)
                     {
                         buffer.Add(board[i][j]);
@@ -362,14 +357,6 @@ namespace MatchThree
                 List<Tile> buffer = new List<Tile>();
                 for (int i = 0; i < 8; i++)
                 {
-                    // Temporary
-                    if (board[i][j].tile == Tiles.None)
-                    {
-                        ClearBuffer(buffer);
-                        continue;
-                    }
-                    //
-
                     if (buffer.Count == 0)
                     {
                         buffer.Add(board[i][j]);
@@ -396,7 +383,7 @@ namespace MatchThree
                 {
                     if (board[i][j].markedAsDead)
                     {
-                        //Add scores here
+                        MatchThreeGame.score++;
                         result = true;
                         board[i][j].markedAsDead = false;
                         board[i][j].outline = Outlines.None;
