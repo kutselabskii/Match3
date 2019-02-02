@@ -33,6 +33,8 @@ namespace MatchThree
         public Tiles tile;
         public Outlines outline;
 
+        public Tile() { }
+
         public Tile(int _x, int _y, Point _coordinates, Tiles _tile, Outlines _outline)
         {
             x = _x;
@@ -48,6 +50,17 @@ namespace MatchThree
             spriteBatch.Draw(Board.outlineTextures[outline], new Rectangle(coordinates.X, coordinates.Y, Board.columnWidth, Board.rowHeight), Color.White);
         }
 
+        public bool IsNeighbour(Tile other)
+        {
+            return (x == other.x && Math.Abs(y - other.y) == 1) || (y == other.y && Math.Abs(x - other.x) == 1);
+        }
+
+        public void Swap(Tile other)
+        {
+            Tiles swapperTile = tile;
+            tile = other.tile;
+            other.tile = swapperTile;
+        }
     }
 
     class Board
@@ -63,7 +76,8 @@ namespace MatchThree
 
         private List<List<Tile>> board;
 
-        private bool isHighlighted;
+        private bool tileIsHighlighted;
+        private Tile highlightedTile;
 
 
         public void Initialize()
@@ -104,7 +118,26 @@ namespace MatchThree
                 int y = (mouseState.Y - rowHeight) / rowHeight;
 
                 if (mouseState.Y > rowHeight && x >= 0 && x < 8 && y >= 0 && y < 8)
-                    board[x][y].outline = (board[x][y].outline == Outlines.Default) ? Outlines.Highlighted : Outlines.Default;
+                {
+                    if (tileIsHighlighted)
+                    {
+                        if (highlightedTile.IsNeighbour(board[x][y]))
+                        {
+                            highlightedTile.Swap(board[x][y]);
+                            RemoveSelection();
+                        }
+                        else
+                        {
+                            RemoveSelection();
+                        }
+                    }
+                    else
+                    {
+                        board[x][y].outline = (board[x][y].outline == Outlines.Default) ? Outlines.Highlighted : Outlines.Default;
+                        tileIsHighlighted = true;
+                        highlightedTile = board[x][y];
+                    }
+                }
             }
         }
 
@@ -132,7 +165,7 @@ namespace MatchThree
 
         private void GenerateBoard()
         {
-            isHighlighted = false;
+            tileIsHighlighted = false;
 
             if (board != null)
                 board.Clear();
@@ -145,6 +178,13 @@ namespace MatchThree
             for (int i = 0; i < 8; i++)
                 for (int j = 0; j < 8; j++)
                     board[i].Add(new Tile(i, j, new Point(i * columnWidth, (j + 1) * rowHeight), (Tiles)rand.Next(0, 5), Outlines.Default));
+        }
+
+        private void RemoveSelection()
+        {
+            tileIsHighlighted = false;
+            highlightedTile.outline = Outlines.Default;
+            highlightedTile = null;
         }
     }
 }
