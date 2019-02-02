@@ -4,6 +4,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
+// TEMP
+using System.Diagnostics;
+//
+
 namespace MatchThree
 {
     public enum Tiles
@@ -25,21 +29,23 @@ namespace MatchThree
     class Tile
     {
         public int x, y;
+        public Point coordinates;
         public Tiles tile;
         public Outlines outline;
 
-        public Tile(int _x, int _y, Tiles _tile, Outlines _outline)
+        public Tile(int _x, int _y, Point _coordinates, Tiles _tile, Outlines _outline)
         {
             x = _x;
             y = _y;
+            coordinates = _coordinates;
             tile = _tile;
             outline = _outline;
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(Board.tileTextures[tile], new Rectangle(x, y, Board.columnWidth, Board.rowHeight), Color.White);
-            spriteBatch.Draw(Board.outlineTextures[outline], new Rectangle(x, y, Board.columnWidth, Board.rowHeight), Color.White);
+            spriteBatch.Draw(Board.tileTextures[tile], new Rectangle(coordinates.X, coordinates.Y, Board.columnWidth, Board.rowHeight), Color.White);
+            spriteBatch.Draw(Board.outlineTextures[outline], new Rectangle(coordinates.X, coordinates.Y, Board.columnWidth, Board.rowHeight), Color.White);
         }
 
     }
@@ -57,20 +63,16 @@ namespace MatchThree
 
         private List<List<Tile>> board;
 
+        private bool isHighlighted;
+
+
         public void Initialize()
         {
             graphics = MatchThreeGame.graphics;
             tileTextures = new Dictionary<Tiles, Texture2D>();
             outlineTextures = new Dictionary<Outlines, Texture2D>();
 
-            board = new List<List<Tile>>();
-            for (int i = 0; i < 8; i++)
-                board.Add(new List<Tile>());
-
-            Random rand = new Random();
-            for (int i = 0; i < 8; i++)
-                for (int j = 0; j < 8; j++)
-                    board[i].Add(new Tile(j * columnWidth, (i + 1) * rowHeight, (Tiles)rand.Next(0, 5), Outlines.Default));
+            GenerateBoard();
         }
 
         public void LoadContent(Microsoft.Xna.Framework.Content.ContentManager content)
@@ -84,7 +86,7 @@ namespace MatchThree
             tileTextures.Add(Tiles.Cross, content.Load<Texture2D>("Figures/cross0000"));
 
             outlineTextures.Add(Outlines.Default, CreateOutlineTexture(Color.LightGray));
-            outlineTextures.Add(Outlines.Highlighted, CreateOutlineTexture(Color.Yellow, 7));
+            outlineTextures.Add(Outlines.Highlighted, CreateOutlineTexture(Color.Yellow, 5));
         }
 
         public void UnloadContent()
@@ -98,10 +100,10 @@ namespace MatchThree
 
             if (mouseState.LeftButton == ButtonState.Pressed && MatchThreeGame.previousMouseButtonState != ButtonState.Pressed)
             {
-                int y = mouseState.X / columnWidth;
-                int x = (mouseState.Y - 96) / rowHeight;
+                int x = mouseState.X / columnWidth;
+                int y = (mouseState.Y - rowHeight) / rowHeight;
 
-                if (x > 0 && x < 8 && y > 0 && y < 8)
+                if (mouseState.Y > rowHeight && x >= 0 && x < 8 && y >= 0 && y < 8)
                     board[x][y].outline = (board[x][y].outline == Outlines.Default) ? Outlines.Highlighted : Outlines.Default;
             }
         }
@@ -126,6 +128,23 @@ namespace MatchThree
                         pixels[i * columnWidth + j] = Color.Transparent;
             outline.SetData(pixels);
             return outline;
+        }
+
+        private void GenerateBoard()
+        {
+            isHighlighted = false;
+
+            if (board != null)
+                board.Clear();
+
+            board = new List<List<Tile>>();
+            for (int i = 0; i < 8; i++)
+                board.Add(new List<Tile>());
+
+            Random rand = new Random();
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++)
+                    board[i].Add(new Tile(i, j, new Point(i * columnWidth, (j + 1) * rowHeight), (Tiles)rand.Next(0, 5), Outlines.Default));
         }
     }
 }
