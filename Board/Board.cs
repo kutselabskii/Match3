@@ -128,6 +128,8 @@ namespace MatchThree
 
         private List<Tile> fallingTiles;
 
+        float remainingTime;
+
         public void Initialize()
         {
             graphics = MatchThreeGame.graphics;
@@ -143,6 +145,7 @@ namespace MatchThree
             } while (DeleteMarkedTiles());
 
             MatchThreeGame.score = 0;
+            remainingTime = 60f;
 
             state = GameStates.Playing;
         }
@@ -170,6 +173,8 @@ namespace MatchThree
 
         public void Update(GameTime gameTime)
         {
+            remainingTime -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+
             switch (state)
             {
                 case GameStates.Playing:
@@ -194,7 +199,15 @@ namespace MatchThree
             for (int i = 0; i < fallingTiles.Count; i++)
                 fallingTiles[i].Draw(spriteBatch);
 
-            spriteBatch.DrawString(MatchThreeGame.font, "Score: " + MatchThreeGame.score, new Vector2(0, rowHeight / 2), Color.Black);
+            spriteBatch.DrawString(MatchThreeGame.font, 
+                "Score: " + MatchThreeGame.score, 
+                new Vector2(columnWidth / 2, rowHeight / 2), 
+                Color.Black);
+
+            spriteBatch.DrawString(MatchThreeGame.font,
+                "Remaining time: " + Math.Round(remainingTime),
+                new Vector2(columnWidth * 2.5f, rowHeight / 2),
+                Color.Black);
         }
 
         private Texture2D CreateOutlineTexture(Color color, int size = 1)
