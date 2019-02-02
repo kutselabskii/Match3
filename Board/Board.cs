@@ -25,29 +25,35 @@ namespace MatchThree
         Highlighted
     }
 
+    public enum GameStates
+    {
+        Playing,
+        SwapAnimation
+    }
+
     
     class Tile
     {
         public int x, y;
-        public Point coordinates;
+        public Vector2 coordinates;
         public Tiles tile;
         public Outlines outline;
 
         public Tile() { }
 
-        public Tile(int _x, int _y, Point _coordinates, Tiles _tile, Outlines _outline)
+        public Tile(int _x, int _y, Tiles _tile, Outlines _outline)
         {
             x = _x;
             y = _y;
-            coordinates = _coordinates;
+            coordinates = new Vector2(x * Board.columnWidth, (y + 1) * Board.rowHeight);
             tile = _tile;
             outline = _outline;
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(Board.tileTextures[tile], new Rectangle(coordinates.X, coordinates.Y, Board.columnWidth, Board.rowHeight), Color.White);
-            spriteBatch.Draw(Board.outlineTextures[outline], new Rectangle(coordinates.X, coordinates.Y, Board.columnWidth, Board.rowHeight), Color.White);
+            spriteBatch.Draw(Board.tileTextures[tile], new Rectangle((int)coordinates.X, (int)coordinates.Y, Board.columnWidth, Board.rowHeight), Color.White);
+            spriteBatch.Draw(Board.outlineTextures[outline], new Rectangle((int)coordinates.X, (int)coordinates.Y, Board.columnWidth, Board.rowHeight), Color.White);
         }
 
         public bool IsNeighbour(Tile other)
@@ -60,6 +66,17 @@ namespace MatchThree
             Tiles swapperTile = tile;
             tile = other.tile;
             other.tile = swapperTile;
+
+            coordinates = EstimatedCoordinates;
+            other.coordinates = other.EstimatedCoordinates;
+        }
+
+        public Vector2 EstimatedCoordinates
+        {
+            get
+            {
+                return new Vector2(x * Board.columnWidth, (y + 1) * Board.rowHeight);
+            }
         }
     }
 
@@ -67,6 +84,8 @@ namespace MatchThree
     {
         public static int rowHeight = 96;
         public static int columnWidth = 128;
+
+        private float swapSpeed = 300f;
 
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
@@ -78,7 +97,9 @@ namespace MatchThree
 
         private bool tileIsHighlighted;
         private Tile highlightedTile;
+        private Tile targetTile;
 
+        private GameStates state;
 
         public void Initialize()
         {
@@ -87,6 +108,8 @@ namespace MatchThree
             outlineTextures = new Dictionary<Outlines, Texture2D>();
 
             GenerateBoard();
+
+            state = GameStates.Playing;
         }
 
         public void LoadContent(Microsoft.Xna.Framework.Content.ContentManager content)
@@ -110,34 +133,14 @@ namespace MatchThree
 
         public void Update(GameTime gameTime)
         {
-            MouseState mouseState = Mouse.GetState();
-
-            if (mouseState.LeftButton == ButtonState.Pressed && MatchThreeGame.previousMouseButtonState != ButtonState.Pressed)
+            switch (state)
             {
-                int x = mouseState.X / columnWidth;
-                int y = (mouseState.Y - rowHeight) / rowHeight;
-
-                if (mouseState.Y > rowHeight && x >= 0 && x < 8 && y >= 0 && y < 8)
-                {
-                    if (tileIsHighlighted)
-                    {
-                        if (highlightedTile.IsNeighbour(board[x][y]))
-                        {
-                            highlightedTile.Swap(board[x][y]);
-                            RemoveSelection();
-                        }
-                        else
-                        {
-                            RemoveSelection();
-                        }
-                    }
-                    else
-                    {
-                        board[x][y].outline = (board[x][y].outline == Outlines.Default) ? Outlines.Highlighted : Outlines.Default;
-                        tileIsHighlighted = true;
-                        highlightedTile = board[x][y];
-                    }
-                }
+                case GameStates.Playing:
+                    HandlePlaying(gameTime);
+                    break;
+                case GameStates.SwapAnimation:
+                    HandleSwapAnimation(gameTime);
+                    break;
             }
         }
 
@@ -177,7 +180,7 @@ namespace MatchThree
             Random rand = new Random();
             for (int i = 0; i < 8; i++)
                 for (int j = 0; j < 8; j++)
-                    board[i].Add(new Tile(i, j, new Point(i * columnWidth, (j + 1) * rowHeight), (Tiles)rand.Next(0, 5), Outlines.Default));
+                    board[i].Add(new Tile(i, j, (Tiles)rand.Next(0, 5), Outlines.Default));
         }
 
         private void RemoveSelection()
@@ -185,6 +188,60 @@ namespace MatchThree
             tileIsHighlighted = false;
             highlightedTile.outline = Outlines.Default;
             highlightedTile = null;
+            targetTile = null;
+        }
+
+        private void HandlePlaying(GameTime gameTime)
+        {
+            MouseState mouseState = Mouse.GetState();
+
+            if (mouseState.LeftButton == ButtonState.Pressed && MatchThreeGame.previousMouseButtonState != ButtonState.Pressed)
+            {
+                int x = mouseState.X / columnWidth;
+                int y = (mouseState.Y - rowHeight) / rowHeight;
+
+                if (mouseState.Y > rowHeight && x >= 0 && x < 8 && y >= 0 && y < 8)
+                {
+                    if (tileIsHighlighted)
+                    {
+                        if (highlightedTile.IsNeighbour(board[x][y]))
+                        {
+                            state = GameStates.SwapAnimation;
+                            targetTile = board[x][y];
+                        }
+                        else
+                        {
+                            RemoveSelection();
+                        }
+                    }
+                    else
+                    {
+                        board[x][y].outline = (board[x][y].outline == Outlines.Default) ? Outlines.Highlighted : Outlines.Default;
+                        tileIsHighlighted = true;
+                        highlightedTile = board[x][y];
+                    }
+                }
+            }
+        }
+
+        private void HandleSwapAnimation(GameTime gameTime)
+        {
+            Vector2 moveTo;
+
+            moveTo = targetTile.EstimatedCoordinates - highlightedTile.coordinates;
+            moveTo.Normalize();
+            highlightedTile.coordinates += moveTo * swapSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            moveTo = highlightedTile.EstimatedCoordinates - targetTile.coordinates;
+            moveTo.Normalize();
+            targetTile.coordinates += moveTo * swapSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if ((targetTile.EstimatedCoordinates - highlightedTile.coordinates).LengthSquared() < 5f)
+            {
+                state = GameStates.Playing;
+                highlightedTile.Swap(targetTile);
+                RemoveSelection();
+            }
         }
     }
 }
