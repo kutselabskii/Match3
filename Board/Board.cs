@@ -114,7 +114,11 @@ namespace MatchThree
             tileTextures = new Dictionary<Tiles, Texture2D>();
             outlineTextures = new Dictionary<Outlines, Texture2D>();
 
-            GenerateBoard();
+            do
+            {
+                GenerateBoard();
+                FindMultiples();
+            } while (DeleteMarkedTiles());
 
             state = GameStates.Playing;
         }
