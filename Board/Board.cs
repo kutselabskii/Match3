@@ -30,7 +30,8 @@ namespace MatchThree
     public enum GameStates
     {
         Playing,
-        SwapAnimation
+        SwapAnimation,
+        SwapBackwardsAnimation,
     }
 
     
@@ -102,7 +103,6 @@ namespace MatchThree
 
         private List<List<Tile>> board;
 
-        private bool tileIsHighlighted;
         private Tile highlightedTile;
         private Tile targetTile;
 
@@ -152,6 +152,7 @@ namespace MatchThree
                     HandlePlaying(gameTime);
                     break;
                 case GameStates.SwapAnimation:
+                case GameStates.SwapBackwardsAnimation:
                     HandleSwapAnimation(gameTime);
                     break;
             }
@@ -181,7 +182,7 @@ namespace MatchThree
 
         private void GenerateBoard()
         {
-            tileIsHighlighted = false;
+            highlightedTile = null;
 
             if (board != null)
                 board.Clear();
@@ -198,8 +199,10 @@ namespace MatchThree
 
         private void RemoveSelection()
         {
-            tileIsHighlighted = false;
-            highlightedTile.outline = Outlines.Default;
+            if (highlightedTile.tile != Tiles.None)
+                highlightedTile.outline = Outlines.Default;
+            if (targetTile != null && targetTile.tile != Tiles.None)
+                targetTile.outline = Outlines.Default;
             highlightedTile = null;
             targetTile = null;
         }
@@ -215,7 +218,7 @@ namespace MatchThree
 
                 if (mouseState.Y > rowHeight && x >= 0 && x < 8 && y >= 0 && y < 8)
                 {
-                    if (tileIsHighlighted)
+                    if (highlightedTile != null)
                     {
                         if (highlightedTile.IsNeighbour(board[x][y]))
                         {
@@ -230,7 +233,6 @@ namespace MatchThree
                     else
                     {
                         board[x][y].outline = (board[x][y].outline == Outlines.Default) ? Outlines.Highlighted : Outlines.Default;
-                        tileIsHighlighted = true;
                         highlightedTile = board[x][y];
                     }
                 }
@@ -251,14 +253,33 @@ namespace MatchThree
 
             if ((targetTile.EstimatedCoordinates - highlightedTile.coordinates).LengthSquared() < 5f)
             {
-                state = GameStates.Playing;
                 highlightedTile.Swap(targetTile);
 
-                FindMultiples();
-                DeleteMarkedTiles();
-                // Swap backwards if no tiles were deleted
+                if (state == GameStates.SwapBackwardsAnimation)
+                {
+                    state = GameStates.Playing;
+                    RemoveSelection();
+                }
 
-                RemoveSelection();
+                if (state == GameStates.SwapAnimation)
+                {
+                    FindMultiples();
+                    if (DeleteMarkedTiles())
+                    {
+                        state = GameStates.Playing;
+                        RemoveSelection();
+                    }
+                    else
+                    {
+                        state = GameStates.SwapBackwardsAnimation;
+
+                        int x = highlightedTile.x, y = highlightedTile.y;
+                        int hX = targetTile.x, hY = targetTile.y;
+
+                        highlightedTile = board[hX][hY];
+                        targetTile = board[x][y];
+                    }
+                }
             }
         }
 
@@ -278,6 +299,15 @@ namespace MatchThree
                 List<Tile> buffer = new List<Tile>();
                 for (int j = 0; j < 8; j++)
                 {
+
+                    // Temporary
+                    if (board[i][j].tile == Tiles.None)
+                    {
+                        ClearBuffer(buffer);
+                        continue;
+                    }
+                    //
+
                     if (buffer.Count == 0)
                     {
                         buffer.Add(board[i][j]);
@@ -301,6 +331,14 @@ namespace MatchThree
                 List<Tile> buffer = new List<Tile>();
                 for (int i = 0; i < 8; i++)
                 {
+                    // Temporary
+                    if (board[i][j].tile == Tiles.None)
+                    {
+                        ClearBuffer(buffer);
+                        continue;
+                    }
+                    //
+
                     if (buffer.Count == 0)
                     {
                         buffer.Add(board[i][j]);
