@@ -44,16 +44,18 @@ namespace MatchThree
         public Outlines outline;
         public bool markedAsDead;
 
-        public Vector2 targetCoordinates;
+        public Tile target;
 
         public Tile()
         {
             markedAsDead = false;
+            target = null;
         }
 
         public Tile(int _x, int _y, Tiles _tile, Outlines _outline)
         {
             markedAsDead = false;
+            target = null;
             x = _x;
             y = _y;
             coordinates = new Vector2(x * Board.columnWidth, (y + 1) * Board.rowHeight);
@@ -84,7 +86,7 @@ namespace MatchThree
 
         public void Move(GameTime gameTime)
         {
-            Vector2 moveTo = targetCoordinates - coordinates;
+            Vector2 moveTo = target.EstimatedCoordinates - coordinates;
             moveTo.Normalize();
             coordinates += moveTo * Board.swapSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
         }
@@ -100,6 +102,8 @@ namespace MatchThree
 
     class Board
     {
+        public static Random rand = new Random();
+
         public static int rowHeight = 96;
         public static int columnWidth = 128;
 
@@ -118,11 +122,15 @@ namespace MatchThree
 
         private GameStates state;
 
+        private List<Tile> fallingTiles;
+
         public void Initialize()
         {
             graphics = MatchThreeGame.graphics;
             tileTextures = new Dictionary<Tiles, Texture2D>();
             outlineTextures = new Dictionary<Outlines, Texture2D>();
+
+            fallingTiles = new List<Tile>();
 
             do
             {
@@ -165,6 +173,9 @@ namespace MatchThree
                 case GameStates.SwapBackwardsAnimation:
                     HandleSwapAnimation(gameTime);
                     break;
+                case GameStates.FallAnimation:
+                    HandleFallAnimation(gameTime);
+                    break;
             }
         }
 
@@ -173,6 +184,9 @@ namespace MatchThree
             for (int i = 0; i < board.Count; i++)
                 for (int j = 0; j < board[i].Count; j++)
                     board[i][j].Draw(spriteBatch);
+
+            for (int i = 0; i < fallingTiles.Count; i++)
+                fallingTiles[i].Draw(spriteBatch);
         }
 
         private Texture2D CreateOutlineTexture(Color color, int size = 1)
@@ -201,7 +215,6 @@ namespace MatchThree
             for (int i = 0; i < 8; i++)
                 board.Add(new List<Tile>());
 
-            Random rand = new Random();
             for (int i = 0; i < 8; i++)
                 for (int j = 0; j < 8; j++)
                     board[i].Add(new Tile(i, j, (Tiles)rand.Next(0, 5), Outlines.Default));
@@ -226,6 +239,8 @@ namespace MatchThree
                 int x = mouseState.X / columnWidth;
                 int y = (mouseState.Y - rowHeight) / rowHeight;
 
+                Debug.WriteLine(x + " " + y);
+
                 if (mouseState.Y > rowHeight && x >= 0 && x < 8 && y >= 0 && y < 8)
                 {
                     if (highlightedTile != null)
@@ -234,8 +249,8 @@ namespace MatchThree
                         {
                             state = GameStates.SwapAnimation;
                             targetTile = board[x][y];
-                            highlightedTile.targetCoordinates = targetTile.EstimatedCoordinates;
-                            targetTile.targetCoordinates = highlightedTile.EstimatedCoordinates;
+                            highlightedTile.target = targetTile;
+                            targetTile.target = highlightedTile;
                         }
                         else
                         {
@@ -256,8 +271,11 @@ namespace MatchThree
             highlightedTile.Move(gameTime);
             targetTile.Move(gameTime);
 
-            if ((targetTile.coordinates - targetTile.targetCoordinates).LengthSquared() < 10f)
+            if ((targetTile.coordinates - targetTile.target.coordinates).Length() < 50f)
             {
+                highlightedTile.target = null;
+                targetTile.target = null;
+
                 highlightedTile.Swap(targetTile);
 
                 if (state == GameStates.SwapBackwardsAnimation)
@@ -271,8 +289,10 @@ namespace MatchThree
                     FindMultiples();
                     if (DeleteMarkedTiles())
                     {
-                        state = GameStates.Playing;
+                        state = GameStates.FallAnimation;
                         RemoveSelection();
+
+                        PrepareFalling();
                     }
                     else
                     {
@@ -283,8 +303,8 @@ namespace MatchThree
 
                         highlightedTile = board[hX][hY];
                         targetTile = board[x][y];
-                        highlightedTile.targetCoordinates = targetTile.EstimatedCoordinates;
-                        targetTile.targetCoordinates = highlightedTile.EstimatedCoordinates;
+                        highlightedTile.target = targetTile;
+                        targetTile.target = highlightedTile;
                     }
                 }
             }
@@ -380,6 +400,82 @@ namespace MatchThree
                     }
                 }
             return result;
+        }
+
+        private void PrepareFalling()
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                int current = 7;
+
+                for (int j = 7; j >= 0; j--)
+                {
+                    if (board[i][j].tile != Tiles.None)
+                    {
+                        if (j != current)
+                            board[i][j].target = board[i][current];
+                        current--;
+                    }
+                }
+
+                int offset = -1;
+                while (current >= 0)
+                {
+                    Tile newOne = new Tile(i, offset, (Tiles)rand.Next(0, 5), Outlines.Default);
+                    newOne.target = board[i][current];
+                    current--;
+                    offset--;
+                    fallingTiles.Add(newOne);
+                }
+            }
+        }
+
+        private void HandleFallAnimation(GameTime gameTime)
+        {
+            bool isFalling = false;
+
+            for (int i = 0; i < 8; i++)
+                for (int j = 7; j >= 0; j--)
+                {
+                    if (board[i][j].target != null)
+                    {
+                        isFalling = true;
+                        board[i][j].Move(gameTime);
+
+                        if ((board[i][j].coordinates - board[i][j].target.EstimatedCoordinates).Length() < 10f)
+                        {
+                            board[i][j].target.Swap(board[i][j]);
+                            board[i][j].target.outline = Outlines.Default;
+                            board[i][j].target = null;
+                        }
+                    }
+                }
+
+            for (int i = 0; i < fallingTiles.Count; i++)
+            {
+                if (fallingTiles[i].target != null)
+                {
+                    isFalling = true;
+                    fallingTiles[i].Move(gameTime);
+
+                    if ((fallingTiles[i].coordinates - fallingTiles[i].target.EstimatedCoordinates).Length() < 10f)
+                    {
+                        fallingTiles[i].target.tile = fallingTiles[i].tile;
+                        fallingTiles[i].target.outline = Outlines.Default;
+                        fallingTiles[i].target = null;
+                    }
+                }
+            }
+
+            if (!isFalling)
+            {
+                fallingTiles.Clear();
+                FindMultiples();
+                if (DeleteMarkedTiles())
+                    PrepareFalling();
+                else
+                    state = GameStates.Playing;
+            }
         }
     }
 }
