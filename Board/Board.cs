@@ -65,8 +65,23 @@ namespace MatchThree
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(Board.tileTextures[tile], new Rectangle((int)coordinates.X, (int)coordinates.Y, Board.columnWidth, Board.rowHeight), Color.White);
-            spriteBatch.Draw(Board.outlineTextures[outline], new Rectangle((int)coordinates.X, (int)coordinates.Y, Board.columnWidth, Board.rowHeight), Color.White);
+            spriteBatch.Draw(Board.tileTextures[tile], 
+                new Rectangle((int)coordinates.X, (int)coordinates.Y, Board.columnWidth, Board.rowHeight),
+                null,
+                Color.White,
+                0,
+                Vector2.Zero,
+                SpriteEffects.None,
+                1f);
+
+            spriteBatch.Draw(Board.outlineTextures[outline], 
+                new Rectangle((int)coordinates.X, (int)coordinates.Y, Board.columnWidth, Board.rowHeight),
+                null,
+                Color.White,
+                0,
+                Vector2.Zero,
+                SpriteEffects.None,
+                1f);
         }
 
         public bool IsNeighbour(Tile other)
@@ -118,6 +133,7 @@ namespace MatchThree
 
         public static Dictionary<Tiles, Texture2D> tileTextures;
         public static Dictionary<Outlines, Texture2D> outlineTextures;
+        private Texture2D whiteBoxTexture;
 
         private List<List<Tile>> board;
 
@@ -164,6 +180,9 @@ namespace MatchThree
             outlineTextures.Add(Outlines.Default, CreateOutlineTexture(Color.LightGray));
             outlineTextures.Add(Outlines.Highlighted, CreateOutlineTexture(Color.Yellow, 5));
             outlineTextures.Add(Outlines.None, CreateOutlineTexture(Color.Transparent));
+
+            whiteBoxTexture = new Texture2D(graphics.GraphicsDevice, 1, 1);
+            whiteBoxTexture.SetData(new Color[]{ Color.White });
         }
 
         public void UnloadContent()
@@ -192,6 +211,8 @@ namespace MatchThree
 
         public void Draw(GameTime gameTime)
         {
+
+
             for (int i = 0; i < board.Count; i++)
                 for (int j = 0; j < board[i].Count; j++)
                     board[i][j].Draw(spriteBatch);
@@ -199,15 +220,34 @@ namespace MatchThree
             for (int i = 0; i < fallingTiles.Count; i++)
                 fallingTiles[i].Draw(spriteBatch);
 
+            spriteBatch.Draw(whiteBoxTexture,
+                new Rectangle(0, 0, columnWidth * 8, rowHeight),
+                null,
+                Color.White,
+                0,
+                Vector2.Zero,
+                SpriteEffects.None,
+                0.5f);
+
             spriteBatch.DrawString(MatchThreeGame.font, 
                 "Score: " + MatchThreeGame.score, 
-                new Vector2(columnWidth / 2, rowHeight / 2), 
-                Color.Black);
+                new Vector2(columnWidth, rowHeight / 2),
+                Color.Black,
+                0f,
+                Vector2.Zero,
+                1f,
+                SpriteEffects.None,
+                0f);
 
             spriteBatch.DrawString(MatchThreeGame.font,
                 "Remaining time: " + Math.Round(remainingTime),
-                new Vector2(columnWidth * 2.5f, rowHeight / 2),
-                Color.Black);
+                new Vector2(columnWidth * 5, rowHeight / 2),
+                Color.Black,
+                0f,
+                Vector2.Zero,
+                1f,
+                SpriteEffects.None,
+                0f);
         }
 
         private Texture2D CreateOutlineTexture(Color color, int size = 1)
