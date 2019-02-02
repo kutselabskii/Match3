@@ -84,11 +84,14 @@ namespace MatchThree
             other.coordinates = other.EstimatedCoordinates;
         }
 
-        public void Move(GameTime gameTime)
+        public void Move(GameTime gameTime, bool isSwap=false)
         {
             Vector2 moveTo = target.EstimatedCoordinates - coordinates;
             moveTo.Normalize();
-            coordinates += moveTo * Board.swapSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (isSwap)
+                coordinates += moveTo * Board.swapSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            else
+                coordinates += moveTo * Board.fallSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
         }
 
         public Vector2 EstimatedCoordinates
@@ -107,7 +110,8 @@ namespace MatchThree
         public static int rowHeight = 96;
         public static int columnWidth = 128;
 
-        public static float swapSpeed = 400f;
+        public static float swapSpeed = 300f;
+        public static float fallSpeed = 400f;
 
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
@@ -239,8 +243,6 @@ namespace MatchThree
                 int x = mouseState.X / columnWidth;
                 int y = (mouseState.Y - rowHeight) / rowHeight;
 
-                Debug.WriteLine(x + " " + y);
-
                 if (mouseState.Y > rowHeight && x >= 0 && x < 8 && y >= 0 && y < 8)
                 {
                     if (highlightedTile != null)
@@ -268,10 +270,10 @@ namespace MatchThree
 
         private void HandleSwapAnimation(GameTime gameTime)
         {
-            highlightedTile.Move(gameTime);
-            targetTile.Move(gameTime);
+            highlightedTile.Move(gameTime, true);
+            targetTile.Move(gameTime, true);
 
-            if ((targetTile.coordinates - targetTile.target.coordinates).Length() < 50f)
+            if ((targetTile.coordinates - targetTile.target.EstimatedCoordinates).Length() < 5f)
             {
                 highlightedTile.target = null;
                 targetTile.target = null;
@@ -281,6 +283,8 @@ namespace MatchThree
                 if (state == GameStates.SwapBackwardsAnimation)
                 {
                     state = GameStates.Playing;
+                    highlightedTile.coordinates = highlightedTile.EstimatedCoordinates;
+                    targetTile.coordinates = targetTile.EstimatedCoordinates;
                     RemoveSelection();
                 }
 
@@ -442,7 +446,7 @@ namespace MatchThree
                         isFalling = true;
                         board[i][j].Move(gameTime);
 
-                        if ((board[i][j].coordinates - board[i][j].target.EstimatedCoordinates).Length() < 10f)
+                        if ((board[i][j].coordinates - board[i][j].target.EstimatedCoordinates).Length() < 5f)
                         {
                             board[i][j].target.Swap(board[i][j]);
                             board[i][j].target.outline = Outlines.Default;
@@ -458,7 +462,7 @@ namespace MatchThree
                     isFalling = true;
                     fallingTiles[i].Move(gameTime);
 
-                    if ((fallingTiles[i].coordinates - fallingTiles[i].target.EstimatedCoordinates).Length() < 10f)
+                    if ((fallingTiles[i].coordinates - fallingTiles[i].target.EstimatedCoordinates).Length() < 5f)
                     {
                         fallingTiles[i].target.tile = fallingTiles[i].tile;
                         fallingTiles[i].target.outline = Outlines.Default;
