@@ -32,6 +32,7 @@ namespace MatchThree
         Playing,
         SwapAnimation,
         SwapBackwardsAnimation,
+        FallAnimation,
     }
 
     
@@ -42,6 +43,8 @@ namespace MatchThree
         public Tiles tile;
         public Outlines outline;
         public bool markedAsDead;
+
+        public Vector2 targetCoordinates;
 
         public Tile()
         {
@@ -79,6 +82,13 @@ namespace MatchThree
             other.coordinates = other.EstimatedCoordinates;
         }
 
+        public void Move(GameTime gameTime)
+        {
+            Vector2 moveTo = targetCoordinates - coordinates;
+            moveTo.Normalize();
+            coordinates += moveTo * Board.swapSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+        }
+
         public Vector2 EstimatedCoordinates
         {
             get
@@ -93,7 +103,7 @@ namespace MatchThree
         public static int rowHeight = 96;
         public static int columnWidth = 128;
 
-        private float swapSpeed = 300f;
+        public static float swapSpeed = 400f;
 
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
@@ -224,6 +234,8 @@ namespace MatchThree
                         {
                             state = GameStates.SwapAnimation;
                             targetTile = board[x][y];
+                            highlightedTile.targetCoordinates = targetTile.EstimatedCoordinates;
+                            targetTile.targetCoordinates = highlightedTile.EstimatedCoordinates;
                         }
                         else
                         {
@@ -241,17 +253,10 @@ namespace MatchThree
 
         private void HandleSwapAnimation(GameTime gameTime)
         {
-            Vector2 moveTo;
+            highlightedTile.Move(gameTime);
+            targetTile.Move(gameTime);
 
-            moveTo = targetTile.EstimatedCoordinates - highlightedTile.coordinates;
-            moveTo.Normalize();
-            highlightedTile.coordinates += moveTo * swapSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-            moveTo = highlightedTile.EstimatedCoordinates - targetTile.coordinates;
-            moveTo.Normalize();
-            targetTile.coordinates += moveTo * swapSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-            if ((targetTile.EstimatedCoordinates - highlightedTile.coordinates).LengthSquared() < 5f)
+            if ((targetTile.coordinates - targetTile.targetCoordinates).LengthSquared() < 10f)
             {
                 highlightedTile.Swap(targetTile);
 
@@ -278,6 +283,8 @@ namespace MatchThree
 
                         highlightedTile = board[hX][hY];
                         targetTile = board[x][y];
+                        highlightedTile.targetCoordinates = targetTile.EstimatedCoordinates;
+                        targetTile.targetCoordinates = highlightedTile.EstimatedCoordinates;
                     }
                 }
             }
