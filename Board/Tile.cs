@@ -26,6 +26,7 @@ namespace MatchThree
         {
             markedAsDead = false;
             target = null;
+
             this.x = x;
             this.y = y;
             coordinates = new Vector2(x * Board.columnWidth, (y + 1) * Board.rowHeight);
