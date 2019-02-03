@@ -4,6 +4,14 @@ using Microsoft.Xna.Framework.Input;
 
 namespace MatchThree
 {
+    enum MenuStates
+    {
+        MainMenu,
+        Gameplay,
+        EndGame
+    }
+
+
     public class MatchThreeGame : Game
     {
         public static GraphicsDeviceManager graphics;
@@ -15,6 +23,9 @@ namespace MatchThree
         public static int score;
 
         Board board;
+        MainMenu mainMenu;
+
+        MenuStates state;
 
         public MatchThreeGame()
         {
@@ -22,6 +33,7 @@ namespace MatchThree
             Content.RootDirectory = "Content";
 
             board = new Board();
+            mainMenu = new MainMenu();
         }
 
 
@@ -34,7 +46,8 @@ namespace MatchThree
             IsMouseVisible = true;
             previousMouseButtonState = ButtonState.Released;
 
-            board.Initialize();
+            state = MenuStates.MainMenu;
+            mainMenu.Initialize();
 
             base.Initialize();
         }
@@ -49,17 +62,29 @@ namespace MatchThree
 
         protected override void UnloadContent()
         {
-            board.UnloadContent();
+
         }
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+            switch (state)
+            {
+                case MenuStates.MainMenu:
+                    if (mainMenu.Update(gameTime))
+                    {
+                        state = MenuStates.Gameplay;
+                        board.Initialize();
+                    }
+                    break;
+                case MenuStates.Gameplay:
+                    if (board.Update(gameTime))
+                    {
+                        state = MenuStates.EndGame;
+                    }
+                    break;
+            }
 
-            board.Update(gameTime);
             previousMouseButtonState = Mouse.GetState().LeftButton;
-
             base.Update(gameTime);
         }
 
@@ -68,7 +93,15 @@ namespace MatchThree
             GraphicsDevice.Clear(Color.White);
             spriteBatch.Begin();
 
-            board.Draw(gameTime);
+            switch (state)
+            {
+                case MenuStates.MainMenu:
+                    mainMenu.Draw(gameTime);
+                    break;
+                case MenuStates.Gameplay:
+                    board.Draw(gameTime);
+                    break;
+            }
 
             spriteBatch.End();
 

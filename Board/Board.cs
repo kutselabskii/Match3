@@ -146,12 +146,15 @@ namespace MatchThree
 
         float remainingTime;
 
-        public void Initialize()
+        public Board()
         {
             graphics = MatchThreeGame.graphics;
             tileTextures = new Dictionary<Tiles, Texture2D>();
             outlineTextures = new Dictionary<Outlines, Texture2D>();
+        }
 
+        public void Initialize()
+        {
             fallingTiles = new List<Tile>();
 
             do
@@ -185,12 +188,7 @@ namespace MatchThree
             whiteBoxTexture.SetData(new Color[]{ Color.White });
         }
 
-        public void UnloadContent()
-        {
-        
-        }
-
-        public void Update(GameTime gameTime)
+        public bool Update(GameTime gameTime)
         {
             remainingTime -= (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -207,12 +205,12 @@ namespace MatchThree
                     HandleFallAnimation(gameTime);
                     break;
             }
+
+            return false;
         }
 
         public void Draw(GameTime gameTime)
         {
-
-
             for (int i = 0; i < board.Count; i++)
                 for (int j = 0; j < board[i].Count; j++)
                     board[i][j].Draw(spriteBatch);
@@ -250,9 +248,9 @@ namespace MatchThree
                 0f);
         }
 
-        private Texture2D CreateOutlineTexture(Color color, int size = 1)
+        public static Texture2D CreateOutlineTexture(Color color, int size = 1)
         {
-            Texture2D outline = new Texture2D(graphics.GraphicsDevice, columnWidth, rowHeight);
+            Texture2D outline = new Texture2D(MatchThreeGame.graphics.GraphicsDevice, columnWidth, rowHeight);
 
             Color[] pixels = new Color[rowHeight * columnWidth];
             for (int i = 0; i < rowHeight; i++)
