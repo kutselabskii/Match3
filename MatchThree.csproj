@@ -42,6 +42,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Board\Board.cs" />
+    <Compile Include="Board\Tile.cs" />
     <Compile Include="EndScreen\EndScreen.cs" />
     <Compile Include="MainMenu\MainMenu.cs" />
     <Compile Include="MatchThreeGame.cs" />
