@@ -146,7 +146,8 @@ namespace MatchThree
                 0,
                 Vector2.Zero,
                 SpriteEffects.None,
-                0.5f);
+                0.5f
+            );
 
             spriteBatch.DrawString(MatchThreeGame.font, 
                 "Score: " + MatchThreeGame.score, 
@@ -156,7 +157,8 @@ namespace MatchThree
                 Vector2.Zero,
                 1f,
                 SpriteEffects.None,
-                0f);
+                0f
+            );
 
             spriteBatch.DrawString(MatchThreeGame.font,
                 "Remaining time: " + Math.Round(remainingTime),
@@ -166,7 +168,8 @@ namespace MatchThree
                 Vector2.Zero,
                 1f,
                 SpriteEffects.None,
-                0f);
+                0f
+            );
         }
 
         public static Texture2D CreateOutlineTexture(Color color, int size = 1)

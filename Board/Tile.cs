@@ -22,15 +22,15 @@ namespace MatchThree
             target = null;
         }
 
-        public Tile(int _x, int _y, Tiles _tile, Outlines _outline)
+        public Tile(int x, int y, Tiles tile, Outlines outline)
         {
             markedAsDead = false;
             target = null;
-            x = _x;
-            y = _y;
+            this.x = x;
+            this.y = y;
             coordinates = new Vector2(x * Board.columnWidth, (y + 1) * Board.rowHeight);
-            tile = _tile;
-            outline = _outline;
+            this.tile = tile;
+            this.outline = outline;
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -42,7 +42,8 @@ namespace MatchThree
                 0,
                 Vector2.Zero,
                 SpriteEffects.None,
-                1f);
+                1f
+            );
 
             spriteBatch.Draw(Board.outlineTextures[outline],
                 new Rectangle((int)coordinates.X, (int)coordinates.Y, Board.columnWidth, Board.rowHeight),
@@ -51,12 +52,15 @@ namespace MatchThree
                 0,
                 Vector2.Zero,
                 SpriteEffects.None,
-                1f);
+                1f
+            );
         }
 
         public bool IsNeighbour(Tile other)
         {
-            return (x == other.x && Math.Abs(y - other.y) == 1) || (y == other.y && Math.Abs(x - other.x) == 1);
+            return 
+                (x == other.x && Math.Abs(y - other.y) == 1) || 
+                (y == other.y && Math.Abs(x - other.x) == 1);
         }
 
         public void Swap(Tile other)
