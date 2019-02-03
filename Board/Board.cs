@@ -31,7 +31,7 @@ namespace MatchThree
         FallAnimation,
     }
 
-    class Board
+    public class Board
     {
         public static Random rand = new Random();
 

@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace MatchThree
 {
-    class Tile
+    public class Tile
     {
         public int x, y;
         public Vector2 coordinates;
