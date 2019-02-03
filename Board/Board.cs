@@ -191,6 +191,14 @@ namespace MatchThree
         public bool Update(GameTime gameTime)
         {
             remainingTime -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (remainingTime <= 0f)
+            {
+                board.Clear();
+                highlightedTile = null;
+                targetTile = null;
+                fallingTiles.Clear();
+                return true;
+            }
 
             switch (state)
             {

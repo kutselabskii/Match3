@@ -8,7 +8,7 @@ namespace MatchThree
     {
         MainMenu,
         Gameplay,
-        EndGame
+        EndScreen
     }
 
 
@@ -24,6 +24,7 @@ namespace MatchThree
 
         Board board;
         MainMenu mainMenu;
+        EndScreen endScreen;
 
         MenuStates state;
 
@@ -34,6 +35,7 @@ namespace MatchThree
 
             board = new Board();
             mainMenu = new MainMenu();
+            endScreen = new EndScreen();
         }
 
 
@@ -48,6 +50,7 @@ namespace MatchThree
 
             state = MenuStates.MainMenu;
             mainMenu.Initialize();
+            endScreen.Initialize();
 
             base.Initialize();
         }
@@ -79,7 +82,13 @@ namespace MatchThree
                 case MenuStates.Gameplay:
                     if (board.Update(gameTime))
                     {
-                        state = MenuStates.EndGame;
+                        state = MenuStates.EndScreen;
+                    }
+                    break;
+                case MenuStates.EndScreen:
+                    if (endScreen.Update(gameTime))
+                    {
+                        state = MenuStates.MainMenu;
                     }
                     break;
             }
@@ -100,6 +109,9 @@ namespace MatchThree
                     break;
                 case MenuStates.Gameplay:
                     board.Draw(gameTime);
+                    break;
+                case MenuStates.EndScreen:
+                    endScreen.Draw(gameTime);
                     break;
             }
 
